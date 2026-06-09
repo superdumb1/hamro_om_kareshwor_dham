@@ -1,16 +1,17 @@
 "use client";
 import React, { useState } from 'react';
-interface Events
-{
-    id:number;
-    title:string;
-    date:string;
-    time:string;
-    location:string;
-    description:string;
-    tag:string;
-    tagColor:string;
+
+interface Events {
+    id: number;
+    title: string;
+    date: string;
+    time: string;
+    location: string;
+    description: string;
+    tag: string;
+    tagColor: string;
 }
+
 interface EventsData {
     upcoming: Events[];
     past: Events[];
@@ -18,7 +19,7 @@ interface EventsData {
 }
 
 const Events = () => {
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState<string>('upcoming');
 
   const eventsData: EventsData = {
     upcoming: [
@@ -26,7 +27,6 @@ const Events = () => {
         id: 1,
         title: "Weekly Satsang & Bhajan",
         date: "Every Saturday", 
-        
         time: "4:00 PM onwards",
         location: "Main Mandir Hall",
         description: "Join the community for our weekly spiritual gathering, devotional singing, and prasad distribution.",
@@ -68,6 +68,9 @@ const Events = () => {
     ]
   };
 
+  // Safe runtime fallback to prevent SSR array lookup errors during build execution
+  const currentEventsList: Events[] = eventsData[activeTab] || [];
+
   return (
     <section id="events" className="py-10 px-4 max-w-7xl mx-auto bg-stone-50 min-h-[500px]">
       {/* Section Header */}
@@ -81,7 +84,7 @@ const Events = () => {
         </p>
       </div>
 
-      {/* Tab Filter Controller (No heavy containers, clean button links styling) */}
+      {/* Tab Filter Controller */}
       <div className="flex justify-center mb-6">
         <div className="inline-flex p-1 bg-stone-200/60 border border-stone-300/40 rounded-xl">
           <button
@@ -109,8 +112,8 @@ const Events = () => {
 
       {/* Events Stream / Cards Feed */}
       <div className="space-y-4 max-w-2xl mx-auto">
-        {eventsData[activeTab].length > 0 ? (
-          eventsData[activeTab].map((event:any) => (
+        {currentEventsList.length > 0 ? (
+          currentEventsList.map((event: Events) => (
             <div
               key={event.id}
               className="bg-white border border-stone-200/80 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200"

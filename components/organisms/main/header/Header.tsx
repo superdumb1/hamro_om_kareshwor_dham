@@ -1,8 +1,11 @@
 "use client";
 import Link from 'next/link';
 import React from 'react';
+import { usePathname } from 'next/navigation'; // Safe Next.js router hook
 
 const Header = () => {
+  const pathname = usePathname(); // Safely reads path on client and server
+
   const navItems = [
     { name: "Home", href: "/"},
     { name: "Blogs", href: "/blogs"},
@@ -44,29 +47,34 @@ const Header = () => {
           </div>
         </Link>
 
-        {/* Navigation Menu (No layout gaps or container background colors) */}
+        {/* Navigation Menu */}
         <nav className="mt-3">
-          <ul className="flex items-center flex-wrap m-0 p-0 list-none">
-            {navItems.map((item, index) => (
-              <React.Fragment key={item.name}>
-                {/* Individual Link Button Container */}
-                <li className="sm:flex-none">
-                  <a
-                    href={item.href}
-                    className={`block w-full px-[10px] py-2 text-[14px] font-semibold rounded-lg border text-center transition-all duration-150 whitespace-nowrap tracking-wide uppercase text-xs ${
-                      (item.href === window.location.pathname)
-                        ? "bg-stone-900 text-white border-stone-900 shadow-sm"
-                        : "bg-stone-100 text-stone-700 border-stone-200/60 hover:bg-stone-200 hover:text-stone-900 active:scale-95"
-                    }`}
-                  >
-                    {item.name}
-                  </a>
-                </li>
+          <ul className="flex items-center flex-wrap gap-2 m-0 p-0 list-none">
+            {navItems.map((item, index) => {
+              // Exact string match or fallback sub-route active state check
+              const isActive = pathname === item.href;
 
-                {/* Wrap break row precisely after every 3 items */}
-                {(index + 1) % 3 === 0 && <div className="w-full h-0 m-0 p-0" aria-hidden="true" />}
-              </React.Fragment>
-            ))}
+              return (
+                <React.Fragment key={item.name}>
+                  {/* Individual Link Button Container */}
+                  <li className="sm:flex-none">
+                    <Link
+                      href={item.href}
+                      className={`block w-full px-[10px] py-2 text-[14px] font-semibold rounded-lg border text-center transition-all duration-150 whitespace-nowrap tracking-wide uppercase text-xs ${
+                        isActive
+                          ? "bg-stone-900 text-white border-stone-900 shadow-sm"
+                          : "bg-stone-100 text-stone-700 border-stone-200/60 hover:bg-stone-200 hover:text-stone-900 active:scale-95"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  </li>
+
+                  {/* Wrap break row precisely after every 3 items */}
+                  {(index + 1) % 3 === 0 && <div className="w-full h-0 m-0 p-0" aria-hidden="true" />}
+                </React.Fragment>
+              );
+            })}
           </ul>
         </nav>
       </div>
