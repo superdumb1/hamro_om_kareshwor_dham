@@ -4,12 +4,12 @@ import React from 'react';
 
 const Header = () => {
   const navItems = [
-    { name: "Home", href: "/", isActive: true },
-    { name: "Blogs", href: "/blogs", isActive: false },
-    { name: "Hall of Donors", href: "/hallofdoners", isActive: false },
-    { name: "Membership", href: "/membership", isActive: false },
-    { name: "Events", href: "/events", isActive: false },
-    { name: "Contact Us", href: "#footer", isActive: false },
+    { name: "Home", href: "/"},
+    { name: "Blogs", href: "/blogs"},
+    { name: "Hall of Donors", href: "/hallofdoners"},
+    { name: "Membership", href: "/membership"},
+    { name: "Events", href: "/events" },
+    { name: "Contact Us", href: "#footer" },
   ];
 
   return (
@@ -53,8 +53,8 @@ const Header = () => {
                 <li className="sm:flex-none">
                   <a
                     href={item.href}
-                    className={`block w-full px-2 py-2 text-[14px] font-semibold rounded-lg border text-center transition-all duration-150 whitespace-nowrap tracking-wide uppercase text-xs ${
-                      item.isActive
+                    className={`block w-full px-[10px] py-2 text-[14px] font-semibold rounded-lg border text-center transition-all duration-150 whitespace-nowrap tracking-wide uppercase text-xs ${
+                      (item.href === window.location.pathname)
                         ? "bg-stone-900 text-white border-stone-900 shadow-sm"
                         : "bg-stone-100 text-stone-700 border-stone-200/60 hover:bg-stone-200 hover:text-stone-900 active:scale-95"
                     }`}
