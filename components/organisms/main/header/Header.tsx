@@ -5,11 +5,11 @@ import React from 'react';
 const Header = () => {
   const navItems = [
     { name: "Home", href: "/", isActive: true },
-    { name: "Blogs", href: "#blogs", isActive: false },
-    { name: "Hall of Donors", href: "#donors", isActive: false },
-    { name: "Membership", href: "#membership", isActive: false },
-    { name: "Events", href: "#events", isActive: false },
-    { name: "Contact Us", href: "#contact", isActive: false },
+    { name: "Blogs", href: "/blogs", isActive: false },
+    { name: "Hall of Donors", href: "/hallofdoners", isActive: false },
+    { name: "Membership", href: "/membership", isActive: false },
+    { name: "Events", href: "/events", isActive: false },
+    { name: "Contact Us", href: "#footer", isActive: false },
   ];
 
   return (
