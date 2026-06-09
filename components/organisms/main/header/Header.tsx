@@ -50,10 +50,10 @@ const Header = () => {
             {navItems.map((item, index) => (
               <React.Fragment key={item.name}>
                 {/* Individual Link Button Container */}
-                <li className="min-w-[30%] sm:flex-none">
+                <li className="sm:flex-none">
                   <a
                     href={item.href}
-                    className={`block w-full px-2 py-2 text-[15px] font-semibold rounded-lg border text-center transition-all duration-150 whitespace-nowrap tracking-wide uppercase text-xs ${
+                    className={`block w-full px-2 py-2 text-[14px] font-semibold rounded-lg border text-center transition-all duration-150 whitespace-nowrap tracking-wide uppercase text-xs ${
                       item.isActive
                         ? "bg-stone-900 text-white border-stone-900 shadow-sm"
                         : "bg-stone-100 text-stone-700 border-stone-200/60 hover:bg-stone-200 hover:text-stone-900 active:scale-95"
