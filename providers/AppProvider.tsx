@@ -1,12 +1,15 @@
 import React from 'react'
 import { AuthProvider } from './AuthProvider'
+import QueryProvider from './QueryProvider'
 
 const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
         <div>
-            <AuthProvider>
-                {children}
-            </AuthProvider>
+            <QueryProvider>
+                <AuthProvider>
+                    {children}
+                </AuthProvider>
+            </QueryProvider>
         </div>
     )
 }

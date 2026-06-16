@@ -1,28 +1,18 @@
-// app/(admin)/layout.tsx
-import { getServerSession } from "next-auth";
-import { notFound } from "next/navigation";
+import AdminNav from '@/components/organisms/main/adminNav/AdminNav';
+import React from 'react';
 
-export default async function AdminLayout({
+export default function AdminDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession();
-
-  // If no session, act like this page doesn't exist
-  if (!session) {
-    notFound(); 
-  }
-
- 
-
   return (
-    <div className="flex h-screen bg-bg-primary text-text-primary">
-      {/* Sidebar & Dashboard UI */}
-      <aside className="w-64 bg-bg-shaded border-r border-border">
-         {/* Nav links... */}
-      </aside>
-      <main className="flex-1 p-8">
+    <div className="min-h-screen bg-stone-100 flex flex-col lg:flex-row text-stone-800 font-sans">
+      {/* 🧭 Sidebar Navigation - Rendered once at layout frame boundary */}
+      <AdminNav  />
+
+      {/* 🏛️ Active Main Content Canvas View Router Output */}
+      <main className="grow p-4 sm:p-8 space-y-6 overflow-y-auto">
         {children}
       </main>
     </div>
