@@ -2,8 +2,22 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import MembershipForm from './MembershipForm';
+import { useLanguage } from '@/providers/LanguageToggle'; // Adjust path if needed
+import { ADMIN_MEMBERSHIPS_TRANSLATIONS } from '@/translations/adminMembershipsTranslations';
+
+// Assuming this type exists elsewhere in your project, included for TS reference
+interface Member {
+    id: string;
+    memberId: string;
+    name: string;
+    address: string;
+    joinedDate: string;
+    status: string;
+}
 
 const AdminMembershipsPage = () => {
+    const { lang } = useLanguage();
+    const t = ADMIN_MEMBERSHIPS_TRANSLATIONS[lang];
 
     const [searchTerm, setSearchTerm] = useState("");
     const { data: members = [], isLoading } = useQuery<Member[]>({
@@ -27,14 +41,14 @@ const AdminMembershipsPage = () => {
                 <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 font-serif">
-                            Om Kareshwor <span className="text-orange-600 font-sans font-normal">Samity Executive Admin</span>
+                            {t.titleMain} <span className="text-orange-600 font-sans font-normal">{t.titleSub}</span>
                         </h1>
                         <p className="text-xs text-stone-500 mt-1">
-                            Managed via TanStack Query state engine cache synchronization pipelines.
+                            {t.subtitle}
                         </p>
                     </div>
                     <span className="text-[10px] bg-stone-900 text-stone-100 px-3 py-1 font-bold tracking-widest uppercase rounded border border-stone-800 shadow-sm whitespace-nowrap">
-                        🔐 Access Level: Master Admin
+                        {t.accessBadge}
                     </span>
                 </div>
 
@@ -44,7 +58,7 @@ const AdminMembershipsPage = () => {
                     {/* Manual Entry Mutation Control Field card */}
                     <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm space-y-4">
                         <h2 className="text-sm font-bold uppercase tracking-wider text-stone-900 border-b border-stone-100 pb-2">
-                            Manual Member Initialization
+                            {t.formHeader}
                         </h2>
                         <MembershipForm />
                     </div>
@@ -53,11 +67,11 @@ const AdminMembershipsPage = () => {
                     <div className="lg:col-span-2 bg-white border border-stone-200 rounded-xl p-5 shadow-sm space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-3">
                             <h2 className="text-sm font-bold uppercase tracking-wider text-stone-900">
-                                Core Audit Directory Ledger
+                                {t.tableHeader}
                             </h2>
                             <input
                                 type="text"
-                                placeholder="Filter ledger database grid..."
+                                placeholder={t.searchPlaceholder}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="px-3 py-1.5 text-xs border border-stone-200 rounded-md focus:outline-none focus:border-orange-500 w-full sm:w-56 text-stone-800"
@@ -66,18 +80,18 @@ const AdminMembershipsPage = () => {
 
                         {isLoading ? (
                             <div className="text-center py-20 text-xs font-semibold text-stone-400 tracking-wider">
-                                Fetching remote cache records snap...
+                                {t.loadingText}
                             </div>
                         ) : (
                             <div className="overflow-x-auto border border-stone-100 rounded-lg">
                                 <table className="w-full text-left border-collapse text-xs">
                                     <thead>
                                         <tr className="bg-stone-50 border-b border-stone-200 text-stone-500 uppercase text-[9px] font-bold tracking-wider">
-                                            <th className="p-3">Member ID</th>
-                                            <th className="p-3">Full Name</th>
-                                            <th className="p-3">Address</th>
-                                            <th className="p-3">Enrolled</th>
-                                            <th className="p-3 text-right">Status Badge</th>
+                                            <th className="p-3">{t.colId}</th>
+                                            <th className="p-3">{t.colName}</th>
+                                            <th className="p-3">{t.colAddress}</th>
+                                            <th className="p-3">{t.colEnrolled}</th>
+                                            <th className="p-3 text-right">{t.colStatus}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-stone-100 font-medium text-stone-700">
@@ -101,7 +115,7 @@ const AdminMembershipsPage = () => {
                                         ) : (
                                             <tr>
                                                 <td colSpan={5} className="py-12 text-center text-stone-400">
-                                                    No administrative records found matching parameters.
+                                                    {t.emptyState}
                                                 </td>
                                             </tr>
                                         )}

@@ -1,9 +1,14 @@
 "use client";
 import React, { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from '@/providers/LanguageToggle'; // Adjust path if needed
+import { MEMBERSHIP_TRANSLATIONS } from '@/translations/membershipTranslation';
 
 const MembershipForm = () => {
     const queryClient = useQueryClient();
+    const { lang } = useLanguage();
+    const t = MEMBERSHIP_TRANSLATIONS[lang];
+
     const frontInputRef = useRef<HTMLInputElement>(null);
     const backInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,17 +43,17 @@ const MembershipForm = () => {
             setFiles({ frontSide: null, backSide: null });
             if (frontInputRef.current) frontInputRef.current.value = '';
             if (backInputRef.current) backInputRef.current.value = '';
-            alert('Member saved and documents archived securely.');
+            alert(t.alertSuccess);
         },
         onError: (error: Error) => {
-            alert(`Error: ${error.message}`);
+            alert(`${t.alertError}: ${error.message}`);
         }
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.name || !formData.address || !formData.memberId || !files.frontSide || !files.backSide) {
-            alert("Please fill all fields and attach both side images.");
+            alert(t.alertMissingFields);
             return;
         }
 
@@ -66,7 +71,7 @@ const MembershipForm = () => {
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Full Name</label>
+                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelName}</label>
                 <input
                     type="text"
                     required
@@ -76,7 +81,7 @@ const MembershipForm = () => {
                 />
             </div>
             <div>
-                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Address Ward Reference</label>
+                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelAddress}</label>
                 <input
                     type="text"
                     required
@@ -86,7 +91,7 @@ const MembershipForm = () => {
                 />
             </div>
             <div>
-                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Assigned Member ID Code</label>
+                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelMemberId}</label>
                 <input
                     type="text"
                     required
@@ -96,23 +101,23 @@ const MembershipForm = () => {
                 />
             </div>
             <div>
-                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Samity Status</label>
+                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelStatus}</label>
                 <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded-md focus:outline-none text-stone-700 font-medium cursor-pointer"
                 >
-                    <option value="Active Member">Active Member</option>
-                    <option value="Pending Audit">Pending Audit</option>
+                    <option value="Active Member">{t.statusActive}</option>
+                    <option value="Pending Audit">{t.statusPending}</option>
                 </select>
             </div>
 
             {/* Document upload field groupings */}
             <div className="pt-2 border-t border-stone-100 space-y-3">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">Identification Proof (Nagarikta / NID)</span>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">{t.labelIdProof}</span>
                 
                 <div>
-                    <label className="block text-[10px] font-medium text-stone-600 mb-1">🪪 Document Front Side</label>
+                    <label className="block text-[10px] font-medium text-stone-600 mb-1">{t.labelFrontSide}</label>
                     <input
                         type="file"
                         ref={frontInputRef}
@@ -124,7 +129,7 @@ const MembershipForm = () => {
                 </div>
 
                 <div>
-                    <label className="block text-[10px] font-medium text-stone-600 mb-1">🔄 Document Back Side</label>
+                    <label className="block text-[10px] font-medium text-stone-600 mb-1">{t.labelBackSide}</label>
                     <input
                         type="file"
                         ref={backInputRef}
@@ -141,7 +146,7 @@ const MembershipForm = () => {
                 disabled={addMemberMutation.isPending}
                 className="w-full mt-2 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs uppercase tracking-wider rounded-md transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
             >
-                {addMemberMutation.isPending ? 'Uploading Docs & Saving...' : 'Commit to Database Record'}
+                {addMemberMutation.isPending ? t.btnPending : t.btnSubmit}
             </button>
         </form>
     );

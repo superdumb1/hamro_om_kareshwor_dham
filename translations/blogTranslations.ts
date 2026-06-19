@@ -1,0 +1,42 @@
+export const BLOG_TRANSLATIONS = {
+    en: {
+        formHeader: "Compose New Media Post",
+        labelTitle: "Article Title",
+        labelCategory: "Category Classification",
+        catHistory: "History",
+        catFestivals: "Festivals",
+        catUpdates: "Updates",
+        labelAuthor: "Author Credit",
+        labelExcerpt: "Brief Excerpt",
+        labelContent: "Body Context Content (Supports Markdown)",
+        labelMedia: "Media Gallery Pool Assets",
+        uploadingMsg: "(Uploading files concurrently...)",
+        slotText: "Slot",
+        btnSubmit: "Publish Entry To Chronicle Feed",
+        btnPending: "Syncing Engine...",
+        alertSuccess: "Journal entry and multi-carousel assets published live!",
+        alertMinImages: "Please select and upload at least one complete gallery image.",
+        alertUploadFail: "Failed to upload",
+        alertError: "Error processing operation"
+    },
+    ne: {
+        formHeader: "नयाँ मिडिया पोस्ट सिर्जना गर्नुहोस्",
+        labelTitle: "लेखको शीर्षक",
+        labelCategory: "विधा वर्गीकरण",
+        catHistory: "इतिहास (History)",
+        catFestivals: "चाडपर्व (Festivals)",
+        catUpdates: "अपडेटहरू (Updates)",
+        labelAuthor: "लेखक / स्रोत",
+        labelExcerpt: "छोटो संक्षिप्त विवरण",
+        labelContent: "मुख्य विषयवस्तु विवरण (Markdown समर्थित)",
+        labelMedia: "मिडिया ग्यालेरी फाइलहरू",
+        uploadingMsg: "(फाइलहरू एकैसाथ अपलोड भइरहेका छन्...)",
+        slotText: "स्थान",
+        btnSubmit: "लेख फिडमा प्रकाशित गर्नुहोस्",
+        btnPending: "डाटा सुरक्षित हुँदैछ...",
+        alertSuccess: "पत्रिका प्रविष्टि र ग्यालेरी मिडिया सफलतापूर्वक लाइभ गरियो!",
+        alertMinImages: "कृपया कम्तिमा एउटा पूर्ण मिडिया ग्यालेरी फाइल अपलोड गर्नुहोस्।",
+        alertUploadFail: "अपलोड असफल भयो",
+        alertError: "प्रक्रियामा त्रुटि"
+    }
+};

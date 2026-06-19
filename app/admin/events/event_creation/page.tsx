@@ -1,9 +1,13 @@
 "use client";
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLanguage } from '@/providers/LanguageToggle';
+import { EVENT_TRANSLATIONS } from '@/translations/eventTranslations';
 
 const EventCreationForm = () => {
     const queryClient = useQueryClient();
+    const { lang } = useLanguage();
+    const t = EVENT_TRANSLATIONS[lang];
 
     const [form, setForm] = useState({
         title: '',
@@ -28,7 +32,7 @@ const EventCreationForm = () => {
             return res.json();
         },
         onSuccess: () => {
-            alert('Community event successfully saved to the temple registry!');
+            alert(t.alertSuccess);
             // Reset state parameters completely
             setForm({
                 title: '',
@@ -42,7 +46,7 @@ const EventCreationForm = () => {
             queryClient.invalidateQueries({ queryKey: ['public-events-timeline'] });
         },
         onError: (err: Error) => {
-            alert(`Execution error: ${err.message}`);
+            alert(`${t.alertError}: ${err.message}`);
         }
     });
 
@@ -54,18 +58,18 @@ const EventCreationForm = () => {
     return (
         <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-stone-200 p-6 rounded-xl shadow-sm max-w-2xl text-stone-800 text-xs">
             <h2 className="text-sm font-bold uppercase font-serif border-b border-stone-100 pb-2 text-stone-900">
-                Schedule New Mandir Event / Notice
+                {t.formHeader}
             </h2>
 
             {/* Event Title */}
             <div>
-                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Event Title</label>
+                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelTitle}</label>
                 <input
                     type="text"
                     required
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    placeholder="e.g., Shrawan Sombar Bhajan Kirtan & Feast"
+                    placeholder={t.placeholderTitle}
                     className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none focus:border-orange-500 font-medium"
                 />
             </div>
@@ -73,7 +77,7 @@ const EventCreationForm = () => {
             {/* Date & Time Row */}
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Calendar Date</label>
+                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelDate}</label>
                     <input
                         type="date"
                         required
@@ -83,13 +87,13 @@ const EventCreationForm = () => {
                     />
                 </div>
                 <div>
-                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Execution Time Slot</label>
+                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelTime}</label>
                     <input
                         type="text"
                         required
                         value={form.time}
                         onChange={(e) => setForm({ ...form, time: e.target.value })}
-                        placeholder="e.g., 4:00 PM onwards or All Day"
+                        placeholder={t.placeholderTime}
                         className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none"
                     />
                 </div>
@@ -98,27 +102,27 @@ const EventCreationForm = () => {
             {/* Classification Tags & Location */}
             <div className="grid grid-cols-2 gap-3">
                 <div>
-                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Event Classification Tag</label>
+                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelTag}</label>
                     <select
                         value={form.tagType}
                         onChange={(e) => setForm({ ...form, tagType: e.target.value })}
                         className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none text-stone-700 font-semibold cursor-pointer bg-stone-50"
                     >
-                        <option value="General">General Notice</option>
-                        <option value="Weekly">Weekly Satsang</option>
-                        <option value="Festival">Festival Celebration</option>
-                        <option value="Sanitation">Sanitation / Sanitation Drive</option>
-                        <option value="Meeting">Executive Committee Meeting</option>
+                        <option value="General">{t.tagGeneral}</option>
+                        <option value="Weekly">{t.tagWeekly}</option>
+                        <option value="Festival">{t.tagFestival}</option>
+                        <option value="Sanitation">{t.tagSanitation}</option>
+                        <option value="Meeting">{t.tagMeeting}</option>
                     </select>
                 </div>
                 <div>
-                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Venue / Specific Location</label>
+                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelLocation}</label>
                     <input
                         type="text"
                         required
                         value={form.location}
                         onChange={(e) => setForm({ ...form, location: e.target.value })}
-                        placeholder="e.g., Main Mandir Hall"
+                        placeholder={t.placeholderLocation}
                         className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none"
                     />
                 </div>
@@ -126,13 +130,13 @@ const EventCreationForm = () => {
 
             {/* Detailed Description */}
             <div>
-                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Event Description & Information</label>
+                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelDescription}</label>
                 <textarea
                     rows={4}
                     required
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    placeholder="Provide full details regarding the prasad layout arrangements, volunteer distribution tasks, or holy procedures..."
+                    placeholder={t.placeholderDescription}
                     className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none text-stone-700 leading-relaxed"
                 />
             </div>
@@ -143,7 +147,7 @@ const EventCreationForm = () => {
                 disabled={addEventMutation.isPending}
                 className="w-full py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs uppercase tracking-wider rounded-md shadow-sm transition-colors cursor-pointer disabled:opacity-40"
             >
-                {addEventMutation.isPending ? 'Logging to Database Registry...' : 'Publish Event To Calendar'}
+                {addEventMutation.isPending ? t.btnPending : t.btnSubmit}
             </button>
         </form>
     );

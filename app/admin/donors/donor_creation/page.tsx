@@ -1,9 +1,19 @@
 "use client";
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { DONOR_TRANSLATIONS } from '@/translations/DonerTranslations';
+import { useLanguage } from '@/providers/LanguageToggle';
+
+interface UploadState {
+    url: string;
+    publicId: string;
+    isUploading: boolean;
+}
 
 const DonorCreationForm = () => {
     const queryClient = useQueryClient();
+    const { lang } = useLanguage();
+    const t = DONOR_TRANSLATIONS[lang];
 
     const [form, setForm] = useState({
         fullName: '',
@@ -15,26 +25,23 @@ const DonorCreationForm = () => {
         contactNumber: '',
         isAnonymous: false,
         receivedDate: new Date().toISOString().split('T')[0],
-        nagariktaFrontUrl: '',
-        nagariktaBackUrl: ''
     });
 
-    // Tracking isolated upload workflows
-    const [uploadingFront, setUploadingFront] = useState(false);
-    const [uploadingBack, setUploadingBack] = useState(false);
+    const [nagariktaFront, setNagariktaFront] = useState<UploadState>({ url: '', publicId: '', isUploading: false });
+    const [nagariktaBack, setNagariktaBack] = useState<UploadState>({ url: '', publicId: '', isUploading: false });
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (side === 'front') setUploadingFront(true);
-        else setUploadingBack(true);
+        if (side === 'front') setNagariktaFront(prev => ({ ...prev, isUploading: true }));
+        else setNagariktaBack(prev => ({ ...prev, isUploading: true }));
 
         try {
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('image', file);
 
-            const res = await fetch('/api/upload', {
+            const res = await fetch('/api/blog/media', {
                 method: 'POST',
                 body: formData
             });
@@ -42,15 +49,35 @@ const DonorCreationForm = () => {
             if (!res.ok) throw new Error('Network channel failed to store payload file');
             const data = await res.json();
             
-            setForm(prev => ({
-                ...prev,
-                [side === 'front' ? 'nagariktaFrontUrl' : 'nagariktaBackUrl']: data.url
-            }));
+            if (side === 'front') {
+                setNagariktaFront({ url: data.url, publicId: data.publicId, isUploading: false });
+            } else {
+                setNagariktaBack({ url: data.url, publicId: data.publicId, isUploading: false });
+            }
         } catch (err) {
-            alert(`File Transmission Failed: Could not archive identity document (${side} copy)`);
-        } finally {
-            if (side === 'front') setUploadingFront(false);
-            else setUploadingBack(false);
+            alert(`File Transmission Failed (${side})`);
+            if (side === 'front') setNagariktaFront(prev => ({ ...prev, isUploading: false }));
+            else setNagariktaBack(prev => ({ ...prev, isUploading: false }));
+        }
+    };
+
+    const handleRemoveFile = async (e: React.MouseEvent, side: 'front' | 'back', publicId: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (side === 'front') setNagariktaFront({ url: '', publicId: '', isUploading: false });
+        else setNagariktaBack({ url: '', publicId: '', isUploading: false });
+
+        if (!publicId) return;
+
+        try {
+            await fetch('/api/blog/media', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ publicId })
+            });
+        } catch (err) {
+            console.error("Purge failure:", err);
         }
     };
 
@@ -59,7 +86,9 @@ const DonorCreationForm = () => {
             const submissionPayload = {
                 ...newDonorData,
                 amount: newDonorData.donationType === 'Cash' ? Number(newDonorData.amount) : null,
-                itemDonated: newDonorData.donationType === 'Material Asset' ? newDonorData.itemDonated : ''
+                itemDonated: newDonorData.donationType === 'Material Asset' ? newDonorData.itemDonated : '',
+                nagariktaFrontUrl: nagariktaFront.url,
+                nagariktaBackUrl: nagariktaBack.url
             };
 
             const res = await fetch('/api/donors', {
@@ -74,7 +103,7 @@ const DonorCreationForm = () => {
             return res.json();
         },
         onSuccess: () => {
-            alert('Donor profile recorded successfully with identity reference tracks!');
+            alert(t.alertSuccess);
             setForm({
                 fullName: '',
                 address: '',
@@ -85,9 +114,9 @@ const DonorCreationForm = () => {
                 contactNumber: '',
                 isAnonymous: false,
                 receivedDate: new Date().toISOString().split('T')[0],
-                nagariktaFrontUrl: '',
-                nagariktaBackUrl: ''
             });
+            setNagariktaFront({ url: '', publicId: '', isUploading: false });
+            setNagariktaBack({ url: '', publicId: '', isUploading: false });
             queryClient.invalidateQueries({ queryKey: ['public-donors-registry'] });
         },
         onError: (err: Error) => {
@@ -97,13 +126,18 @@ const DonorCreationForm = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.fullName || !form.address) return;
+        if (!form.isAnonymous && !form.fullName) return;
+        if (!form.address) {
+            alert(t.alertAddressReq);
+            return;
+        }
+        
         if (form.donationType === 'Cash' && !form.amount) {
-            alert('Please specify the monetary cash contribution amount.');
+            alert(t.alertMinCash);
             return;
         }
         if (form.donationType === 'Material Asset' && !form.itemDonated) {
-            alert('Please specify the details of the physical item donated.');
+            alert(t.alertMinMaterial);
             return;
         }
         addDonorMutation.mutate(form);
@@ -113,29 +147,29 @@ const DonorCreationForm = () => {
         <form onSubmit={handleSubmit} className="space-y-4 bg-white border border-stone-200 p-6 rounded-xl shadow-sm max-w-2xl text-stone-800 text-xs">
             <div className="border-b border-stone-100 pb-2 flex justify-between items-center">
                 <h2 className="text-sm font-bold uppercase font-serif text-stone-900">
-                    Log Contribution / Donor Profile
+                    {t.formHeader}
                 </h2>
                 <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 font-bold px-2 py-0.5 rounded">
-                    Treasury Input
+                    {t.badgeText}
                 </span>
             </div>
 
-            {/* Donor Identity Fields */}
+            {/* Name and Phone Layout */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Donor / Family Full Name</label>
+                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelName}</label>
                     <input
                         type="text"
-                        required
+                        required={!form.isAnonymous}
                         disabled={form.isAnonymous}
-                        value={form.isAnonymous ? "Anonymous (Spiritual Donor)" : form.fullName}
+                        value={form.isAnonymous ? t.anonValue : form.fullName}
                         onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                        placeholder="e.g., Ram Bahadur Thapa"
+                        placeholder={t.placeholderName}
                         className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none focus:border-orange-500 font-medium disabled:bg-stone-50 disabled:text-stone-400"
                     />
                 </div>
                 <div>
-                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Contact Phone (Internal Record Only)</label>
+                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelContact}</label>
                     <input
                         type="text"
                         value={form.contactNumber}
@@ -146,37 +180,37 @@ const DonorCreationForm = () => {
                 </div>
             </div>
 
-            {/* Address and Contribution Type Options Selector */}
+            {/* Address and Classification Setup */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Address / Location</label>
+                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelAddress}</label>
                     <input
                         type="text"
                         required
                         value={form.address}
                         onChange={(e) => setForm({ ...form, address: e.target.value })}
-                        placeholder="e.g., Mechinagar-11, Jhapa"
+                        placeholder={t.placeholderAddress}
                         className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none"
                     />
                 </div>
                 <div>
-                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Donation Type Classification</label>
+                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelType}</label>
                     <select
                         value={form.donationType}
                         onChange={(e) => setForm({ ...form, donationType: e.target.value })}
                         className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none text-stone-700 font-semibold cursor-pointer bg-stone-50"
                     >
-                        <option value="Cash">Cash Contribution (रू)</option>
-                        <option value="Material Asset">Material Asset / Physical Item</option>
+                        <option value="Cash">{t.typeCash}</option>
+                        <option value="Material Asset">{t.typeMaterial}</option>
                     </select>
                 </div>
             </div>
 
-            {/* Dynamic Middle Field Section */}
+            {/* Dynamic Value/Item Input & Date fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {form.donationType === 'Cash' ? (
                     <div>
-                        <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Contribution Amount (NPR)</label>
+                        <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelAmount}</label>
                         <div className="relative rounded-md shadow-sm">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span className="text-stone-400 font-bold font-sans">रू</span>
@@ -194,20 +228,20 @@ const DonorCreationForm = () => {
                     </div>
                 ) : (
                     <div>
-                        <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Physical Item Specification</label>
+                        <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelItem}</label>
                         <input
                             type="text"
                             required
                             value={form.itemDonated}
                             onChange={(e) => setForm({ ...form, itemDonated: e.target.value })}
-                            placeholder="e.g., 50 Bags of Cement / Brass Ghanti"
+                            placeholder={t.placeholderItem}
                             className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none focus:border-orange-500 font-medium text-orange-700 bg-orange-50/20"
                         />
                     </div>
                 )}
                 
                 <div>
-                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Receipt Date</label>
+                    <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelDate}</label>
                     <input
                         type="date"
                         required
@@ -218,77 +252,114 @@ const DonorCreationForm = () => {
                 </div>
             </div>
 
-            {/* Dedicated Item / Tribute Notes */}
+            {/* Tribute Strings Box */}
             <div>
-                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">Dedicated Tribute Infrastructure / Dedicated Notes (Optional)</label>
+                <label className="block text-[10px] font-bold uppercase text-stone-500 mb-1">{t.labelTribute}</label>
                 <input
                     type="text"
                     value={form.tributeItem}
                     onChange={(e) => setForm({ ...form, tributeItem: e.target.value })}
-                    placeholder="e.g., Intended for Mandir East Pillar No. 4"
+                    placeholder={t.placeholderTribute}
                     className="w-full px-3 py-1.5 border border-stone-200 rounded-md focus:outline-none"
                 />
             </div>
 
-            {/* 🇳🇵 Dual-Side Nagarikta Upload Box Grid Setup */}
+            {/* Dual Identity File Layout Node */}
             <div className="space-y-1.5">
                 <label className="block text-[10px] font-bold uppercase text-stone-500">
-                    Nagarikta Verification Files (Internal Admin Audit Trail Only)
+                    {t.labelNagarikta}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Front Side File Picker */}
-                    <div className="border border-stone-200 rounded-xl p-3 bg-stone-50/50 flex flex-col justify-between min-h-[90px] relative hover:bg-stone-50 transition-colors">
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={(e) => handleFileUpload(e, 'front')} 
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
+                    
+                    {/* Front Side Card Slot */}
+                    <div className="border border-stone-200 rounded-xl p-3 bg-stone-50/50 flex flex-col justify-between min-h-[90px] relative hover:bg-stone-50 transition-colors group">
+                        {!nagariktaFront.url && !nagariktaFront.isUploading && (
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={(e) => handleFileUpload(e, 'front')} 
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                        )}
                         <div className="flex items-start gap-2.5">
                             <div className="p-2 bg-stone-200/60 rounded-lg text-stone-500 shrink-0">🖼️</div>
                             <div>
-                                <h4 className="font-bold text-stone-800">Nagarikta Front Side</h4>
-                                <p className="text-[10px] text-stone-400">Nepali details & passport photograph</p>
+                                <h4 className="font-bold text-stone-800">{t.nagariktaFront}</h4>
+                                <p className="text-[10px] text-stone-400">{t.nagariktaFrontDesc}</p>
                             </div>
                         </div>
-                        <div className="mt-2 flex items-center justify-between">
+                        
+                        {nagariktaFront.isUploading && (
+                            <div className="absolute inset-0 bg-white/70 backdrop-blur-[0.5px] rounded-xl flex items-center justify-center">
+                                <div className="w-5 h-5 border-2 border-stone-200 border-t-orange-600 rounded-full animate-spin"></div>
+                            </div>
+                        )}
+
+                        <div className="mt-2 flex items-center justify-between z-20">
                             <span className="text-[10px] font-semibold text-orange-600">
-                                {uploadingFront ? 'Saving raw pixels...' : form.nagariktaFrontUrl ? '✓ Ready in queue' : 'Click to select'}
+                                {nagariktaFront.isUploading ? t.statusUploading : nagariktaFront.url ? t.statusAttached : t.statusSelect}
                             </span>
-                            {form.nagariktaFrontUrl && (
-                                <img src={form.nagariktaFrontUrl} className="w-8 h-6 object-cover rounded border border-stone-200" alt="Front Preview" />
+                            {nagariktaFront.url && (
+                                <div className="relative">
+                                    <img src={nagariktaFront.url} className="w-8 h-6 object-cover rounded border border-stone-200" alt="Front Preview" />
+                                    <button
+                                        type="button"
+                                        onClick={(e) => handleRemoveFile(e, 'front', nagariktaFront.publicId)}
+                                        className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center text-[8px] shadow cursor-pointer transition-colors"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Back Side File Picker */}
-                    <div className="border border-stone-200 rounded-xl p-3 bg-stone-50/50 flex flex-col justify-between min-h-[90px] relative hover:bg-stone-50 transition-colors">
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={(e) => handleFileUpload(e, 'back')} 
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
+                    {/* Back Side Card Slot */}
+                    <div className="border border-stone-200 rounded-xl p-3 bg-stone-50/50 flex flex-col justify-between min-h-[90px] relative hover:bg-stone-50 transition-colors group">
+                        {!nagariktaBack.url && !nagariktaBack.isUploading && (
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={(e) => handleFileUpload(e, 'back')} 
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                        )}
                         <div className="flex items-start gap-2.5">
                             <div className="p-2 bg-stone-200/60 rounded-lg text-stone-500 shrink-0">📄</div>
                             <div>
-                                <h4 className="font-bold text-stone-800">Nagarikta Back Side</h4>
-                                <p className="text-[10px] text-stone-400">Issue authority stamp & signatures</p>
+                                <h4 className="font-bold text-stone-800">{t.nagariktaBack}</h4>
+                                <p className="text-[10px] text-stone-400">{t.nagariktaBackDesc}</p>
                             </div>
                         </div>
-                        <div className="mt-2 flex items-center justify-between">
+
+                        {nagariktaBack.isUploading && (
+                            <div className="absolute inset-0 bg-white/70 backdrop-blur-[0.5px] rounded-xl flex items-center justify-center">
+                                <div className="w-5 h-5 border-2 border-stone-200 border-t-orange-600 rounded-full animate-spin"></div>
+                            </div>
+                        )}
+
+                        <div className="mt-2 flex items-center justify-between z-20">
                             <span className="text-[10px] font-semibold text-orange-600">
-                                {uploadingBack ? 'Saving raw pixels...' : form.nagariktaBackUrl ? '✓ Ready in queue' : 'Click to select'}
+                                {nagariktaBack.isUploading ? t.statusUploading : nagariktaBack.url ? t.statusAttached : t.statusSelect}
                             </span>
-                            {form.nagariktaBackUrl && (
-                                <img src={form.nagariktaBackUrl} className="w-8 h-6 object-cover rounded border border-stone-200" alt="Back Preview" />
+                            {nagariktaBack.url && (
+                                <div className="relative">
+                                    <img src={nagariktaBack.url} className="w-8 h-6 object-cover rounded border border-stone-200" alt="Back Preview" />
+                                    <button
+                                        type="button"
+                                        onClick={(e) => handleRemoveFile(e, 'back', nagariktaBack.publicId)}
+                                        className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center text-[8px] shadow cursor-pointer transition-colors"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Privacy Checkbox */}
+            {/* Privacy Check Block Component */}
             <div className="p-3 bg-stone-50 border border-stone-200 rounded-lg flex items-center gap-3">
                 <input
                     type="checkbox"
@@ -305,17 +376,17 @@ const DonorCreationForm = () => {
                     className="w-4 h-4 rounded border-stone-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
                 />
                 <label htmlFor="privacyToggle" className="select-none font-medium text-stone-600 cursor-pointer">
-                    Mask Name Publicly (Mark as Anonymous Donor on public display feed board)
+                    {t.maskCheck}
                 </label>
             </div>
 
-            {/* Submit Action Button */}
+            {/* Submit Action Block */}
             <button
                 type="submit"
-                disabled={addDonorMutation.isPending || uploadingFront || uploadingBack}
+                disabled={addDonorMutation.isPending || nagariktaFront.isUploading || nagariktaBack.isUploading}
                 className="w-full py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold text-xs uppercase tracking-wider rounded-md transition-colors cursor-pointer disabled:opacity-40"
             >
-                {addDonorMutation.isPending ? 'Writing Transaction Record...' : 'Archive Donor in Record Ledger'}
+                {addDonorMutation.isPending ? t.btnPending : t.btnSubmit}
             </button>
         </form>
     );
