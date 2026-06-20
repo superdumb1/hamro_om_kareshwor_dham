@@ -56,7 +56,7 @@ const Membership = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             
             {/* Cost & Access Rules */}
-            <div className="bg-white border border-stone-200/60 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+            {/* <div className="bg-white border border-stone-200/60 rounded-xl p-5 shadow-sm flex flex-col justify-between"> */}
               <div>
                 <div className="flex justify-between items-center border-b border-stone-100 pb-3 mb-3">
                   <h4 className="text-sm font-bold text-stone-800 uppercase tracking-wider font-sans">{t.costTitle}</h4>
@@ -78,11 +78,11 @@ const Membership = () => {
                     {t.lockDesc1}<strong>{t.lockDescStrong}</strong>{t.lockDesc2}
                   </p>
                 </div>
-              </div>
+              {/* </div> */}
             </div>
 
             {/* Privileges List */}
-            <div className="bg-white border border-stone-200/60 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+            {/* <div className="bg-white border border-stone-200/60 rounded-xl p-5 shadow-sm flex flex-col justify-between"> */}
               <div>
                 <h4 className="text-sm font-bold uppercase tracking-wider text-stone-800 font-sans mb-3">
                   {t.privilegesTitle}
@@ -107,7 +107,7 @@ const Membership = () => {
               <div className="mt-4 pt-3 border-t border-stone-100 text-[10px] text-stone-400 text-center font-medium">
                 {t.disclaimer}
               </div>
-            </div>
+            {/* </div> */}
 
           </div>
 
